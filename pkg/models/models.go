@@ -5,7 +5,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-type Snowdepth struct {
+type Problemreport struct {
 	gorm.Model
 	Latitude  float64
 	Longitude float64

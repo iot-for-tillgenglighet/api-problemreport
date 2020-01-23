@@ -7,7 +7,7 @@ import (
 	
 	"github.com/rs/cors"
 	"github.com/99designs/gqlgen/handler"
-	gql "github.com/iot-for-tillgenglighet/api-snowdepth/internal/pkg/graphql"
+	gql "github.com/iot-for-tillgenglighet/api-problemreport/internal/pkg/graphql"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -16,12 +16,12 @@ func Router() {
 
 	mux := http.NewServeMux()
 
-	port := os.Getenv("SNOWDEPTH_API_PORT")
+	port := os.Getenv("PROBLEMREPORT_API_PORT")
 	if port == "" {
 		port = "8880"
 	}
 
-	log.Printf("Starting api-snowdepth on port %s.\n", port)
+	log.Printf("Starting api-problemreport on port %s.\n", port)
 
 	mux.HandleFunc("/api/graphql/playground", handler.Playground("GraphQL playground", "/api/graphql"))
 	mux.HandleFunc("/api/graphql", handler.GraphQL(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}})))

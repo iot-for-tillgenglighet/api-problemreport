@@ -10,7 +10,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
-	"github.com/iot-for-tillgenglighet/api-snowdepth/pkg/models"
+	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/models"
 )
 
 var db *gorm.DB
@@ -31,11 +31,11 @@ func getEnv(key, fallback string) string {
 //initiates a connection to the database.
 func ConnectToDB() {
 
-	dbHost := os.Getenv("SNOWDEPTH_DB_HOST")
-	username := os.Getenv("SNOWDEPTH_DB_USER")
-	dbName := os.Getenv("SNOWDEPTH_DB_NAME")
-	password := os.Getenv("SNOWDEPTH_DB_PASSWORD")
-	sslMode := getEnv("SNOWDEPTH_DB_SSLMODE", "require")
+	dbHost := os.Getenv("PROBLEMREPORT_DB_HOST")
+	username := os.Getenv("PROBLEMREPORT_DB_USER")
+	dbName := os.Getenv("PROBLEMREPORT_DB_NAME")
+	password := os.Getenv("PROBLEMREPORT_DB_PASSWORD")
+	sslMode := getEnv("snow", "require")
 
 	dbURI := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=%s password=%s", dbHost, username, dbName, sslMode, password)
 
@@ -47,7 +47,7 @@ func ConnectToDB() {
 			time.Sleep(3 * time.Second)
 		} else {
 			db = conn
-			db.Debug().AutoMigrate(&models.Snowdepth{})
+			db.Debug().AutoMigrate(&models.Problemreport{})
 			return
 		}
 		defer conn.Close()
@@ -55,10 +55,10 @@ func ConnectToDB() {
 }
 
 //AddManualSnowdepthMeasurement takes a position and a depth and adds a record to the database
-func AddManualSnowdepthMeasurement(latitude, longitude, depth float64) (*models.Snowdepth, error) {
+func AddManualSnowdepthMeasurement(latitude, longitude, depth float64) (*models.Problemreport, error) {
 	t := time.Now().UTC()
 
-	measurement := &models.Snowdepth{
+	measurement := &models.Problemreport{
 		Latitude:  latitude,
 		Longitude: longitude,
 		Depth:     float32(depth),
@@ -72,18 +72,18 @@ func AddManualSnowdepthMeasurement(latitude, longitude, depth float64) (*models.
 
 //GetLatestSnowdepths returns the most recent value for all sensors, as well as
 //all manually added values during the last 24 hours
-func GetLatestSnowdepths() ([]models.Snowdepth, error) {
+func GetLatestSnowdepths() ([]models.Problemreport, error) {
 
 	// Get depths from the last 24 hours
 	queryStart := time.Now().UTC().AddDate(0, 0, -1).Format(time.RFC3339)
 
 	// TODO: Implement this as a single operation instead
 
-	latestFromDevices := []models.Snowdepth{}
-	GetDB().Table("snowdepths").Select("DISTINCT ON (device) *").Where("device <> '' AND timestamp > ?", queryStart).Order("device, timestamp desc").Find(&latestFromDevices)
+	latestFromDevices := []models.Problemreport{}
+	GetDB().Table("problemreport").Select("DISTINCT ON (device) *").Where("device <> '' AND timestamp > ?", queryStart).Order("device, timestamp desc").Find(&latestFromDevices)
 
 	latestManual := []models.Snowdepth{}
-	GetDB().Table("snowdepths").Where("device = '' AND timestamp > ?", queryStart).Find(&latestManual)
+	GetDB().Table("problemreport").Where("device = '' AND timestamp > ?", queryStart).Find(&latestManual)
 
 	return append(latestFromDevices, latestManual...), nil
 }
