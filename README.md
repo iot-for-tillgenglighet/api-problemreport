@@ -21,3 +21,7 @@ The ingress service will exit fatally and restart a couple of times until the Ra
 `docker-compose -f ./deployments/docker-compose.yml down -v`
 
 To clean up the environment properly after testing.
+
+# Regenerate GraphQL files
+
+`go run github.com/99designs/gqlgen -v -c internal/pkg/graphql/gqlgen.yml`

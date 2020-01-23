@@ -15,7 +15,7 @@ func receiveProblemreport(msg amqp.Delivery) {
 
 	log.Info("Message received from queue: " + string(msg.Body))
 
-	depth := &telemetry.Problemreport{}
+	depth := &telemetry.Snowdepth{}
 	err := json.Unmarshal(msg.Body, depth)
 
 	if err != nil {

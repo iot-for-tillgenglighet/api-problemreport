@@ -1,4 +1,4 @@
-module github.com/iot-for-tillgenglighet/api-snowdepth
+module github.com/iot-for-tillgenglighet/api-problemreport
 
 go 1.13
 

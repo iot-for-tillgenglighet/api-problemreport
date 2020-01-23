@@ -1,4 +1,3 @@
-
 type Device @key(fields: "id") {
   id: ID!
 }
@@ -20,7 +19,7 @@ interface Telemetry {
   when: DateTime!
 }
 
-type Snowdepth implements Telemetry {
+type Problemreport implements Telemetry {
   from: Origin!
   when: DateTime!
   depth: Float!
@@ -28,19 +27,5 @@ type Snowdepth implements Telemetry {
 }
 
 type Query @extends {
-  snowdepths: [Snowdepth]!
-}
-
-input MeasurementPosition {
-  lon: Float!
-  lat: Float!
-}
-
-input NewSnowdepthMeasurement {
-    pos: MeasurementPosition!
-    depth: Float!
-}
-
-type Mutation @extends {
-    addSnowdepthMeasurement(input: NewSnowdepthMeasurement!): Snowdepth!
+  snowdepths: [Problemreport]!
 }

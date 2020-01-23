@@ -8,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/models"
 )
@@ -82,7 +81,7 @@ func GetLatestSnowdepths() ([]models.Problemreport, error) {
 	latestFromDevices := []models.Problemreport{}
 	GetDB().Table("problemreport").Select("DISTINCT ON (device) *").Where("device <> '' AND timestamp > ?", queryStart).Order("device, timestamp desc").Find(&latestFromDevices)
 
-	latestManual := []models.Snowdepth{}
+	latestManual := []models.Problemreport{}
 	GetDB().Table("problemreport").Where("device = '' AND timestamp > ?", queryStart).Find(&latestManual)
 
 	return append(latestFromDevices, latestManual...), nil

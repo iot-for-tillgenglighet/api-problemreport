@@ -5,10 +5,8 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
-	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/handler"
 	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging"
-	"github.com/iot-for-tillgenglighet/messaging-golang/pkg/messaging/telemetry"
 )
 
 func main() {
@@ -22,9 +20,9 @@ func main() {
 
 	defer messenger.Close()
 
-	database.ConnectToDB()
+	//	database.ConnectToDB()
 
-	messenger.RegisterTopicMessageHandler((&telemetry.Problemreport{}).TopicName(), receiveProblemreport)
+	//	messenger.RegisterTopicMessageHandler((&telemetry.Snowdepth{}).TopicName(), receiveProblemreport)
 
 	handler.Router()
 }

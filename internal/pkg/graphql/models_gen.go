@@ -21,29 +21,19 @@ type Entity struct {
 	FindDeviceByID *Device `json:"findDeviceByID"`
 }
 
-type MeasurementPosition struct {
-	Lon float64 `json:"lon"`
-	Lat float64 `json:"lat"`
-}
-
-type NewSnowdepthMeasurement struct {
-	Pos   *MeasurementPosition `json:"pos"`
-	Depth float64              `json:"depth"`
-}
-
 type Origin struct {
 	Device *Device        `json:"device"`
 	Pos    *WGS84Position `json:"pos"`
 }
 
-type Snowdepth struct {
+type Problemreport struct {
 	From   *Origin `json:"from"`
 	When   string  `json:"when"`
 	Depth  float64 `json:"depth"`
 	Manual *bool   `json:"manual"`
 }
 
-func (Snowdepth) IsTelemetry() {}
+func (Problemreport) IsTelemetry() {}
 
 type WGS84Position struct {
 	Lon float64 `json:"lon"`
