@@ -34,7 +34,7 @@ func ConnectToDB() {
 	username := os.Getenv("PROBLEMREPORT_DB_USER")
 	dbName := os.Getenv("PROBLEMREPORT_DB_NAME")
 	password := os.Getenv("PROBLEMREPORT_DB_PASSWORD")
-	sslMode := getEnv("snow", "require")
+	sslMode := getEnv("PROBLEMREPORT_DB_SSLMODE", "require")
 
 	dbURI := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=%s password=%s", dbHost, username, dbName, sslMode, password)
 
