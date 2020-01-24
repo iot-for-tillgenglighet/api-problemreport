@@ -18,11 +18,11 @@ services:
       PROBLEMREPORT_DB_NAME: "problemreport"
       PROBLEMREPORT_DB_PASSWORD: "testpass"
       PROBLEMREPORT_DB_SSLMODE: "disable"
-      PROBLEMREPORT_API_PORT: "8282"
+      PROBLEMREPORT_API_PORT: "8383"
       RABBITMQ_HOST: "rabbitmq"
 
     ports:
-      - "8282:8282"
+      - "8383:8383"
 
   #  federation:
   #    build:
@@ -57,7 +57,7 @@ services:
       - "5432"
 
   rabbitmq:
-    image: "bitnami/rabbitmq:3.7"
+    image: "bitnami/rabbitmq:3.8"
     ports:
       - "4369"
       - "5672"
