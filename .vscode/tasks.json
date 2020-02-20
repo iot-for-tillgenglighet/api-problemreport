@@ -1,0 +1,12 @@
+{
+    "version":"2.0.0",
+    "tasks": [
+        {
+            "label":"env-launch",
+            "command": "docker-compose",
+            "args": ["-f", "${workspaceFolder}/deployments/docker-debug.yml", "up"],
+            "type": "shell",
+            "isBackground": true
+        }
+    ]
+}

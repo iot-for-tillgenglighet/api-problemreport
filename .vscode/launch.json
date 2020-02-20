@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "go",
+            "request": "launch",
+            "preLaunchTask": "env-launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/api-problemreport/main.go",
+            "env": {
+                "PROBLEMREPORT_DB_HOST": "localhost",
+                "PROBLEMREPORT_DB_USER": "testuser",
+                "PROBLEMREPORT_DB_NAME": "problemreport",
+                "PROBLEMREPORT_DB_PASSWORD": "testpass",
+                "PROBLEMREPORT_DB_SSLMODE": "disable",
+                "PROBLEMREPORT_API_PORT": "8383",
+                "RABBITMQ_HOST": "localhost"
+            },
+            "args": []
+        }
+    ]
+}
