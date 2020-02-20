@@ -46,42 +46,51 @@ func ConnectToDB() {
 			time.Sleep(3 * time.Second)
 		} else {
 			db = conn
-			db.Debug().AutoMigrate(&models.Problemreport{})
+			db.Debug().AutoMigrate(&models.ProblemReport{})
 			return
 		}
 		defer conn.Close()
 	}
 }
 
-//AddManualSnowdepthMeasurement takes a position and a depth and adds a record to the database
-func AddManualSnowdepthMeasurement(latitude, longitude, depth float64) (*models.Problemreport, error) {
-	t := time.Now().UTC()
+//Create creates a report
+func Create(latitude float64, longitude float64, problemType string) (*models.ProblemReport, error) {
 
-	measurement := &models.Problemreport{
+	currentTime := time.Now().UTC()
+
+	entity := &models.ProblemReport{
 		Latitude:  latitude,
 		Longitude: longitude,
-		Depth:     float32(depth),
-		Timestamp: t.Format(time.RFC3339),
-	}
+		Type:      problemType,
+		Timestamp: currentTime.Format(time.RFC3339)}
 
-	GetDB().Create(measurement)
+	GetDB().Create(entity)
 
-	return measurement, nil
+	return entity, nil
+}
+
+//GetAll Fetches all problemreports
+func GetAll() ([]models.ProblemReport, error) {
+
+	entities := []models.ProblemReport{}
+	GetDB().Table("problemreport").Select("*").Find(&entities)
+
+	return entities, nil
 }
 
 //GetLatestSnowdepths returns the most recent value for all sensors, as well as
 //all manually added values during the last 24 hours
-func GetLatestSnowdepths() ([]models.Problemreport, error) {
+func GetLatestSnowdepths() ([]models.ProblemReport, error) {
 
 	// Get depths from the last 24 hours
 	queryStart := time.Now().UTC().AddDate(0, 0, -1).Format(time.RFC3339)
 
 	// TODO: Implement this as a single operation instead
 
-	latestFromDevices := []models.Problemreport{}
+	latestFromDevices := []models.ProblemReport{}
 	GetDB().Table("problemreport").Select("DISTINCT ON (device) *").Where("device <> '' AND timestamp > ?", queryStart).Order("device, timestamp desc").Find(&latestFromDevices)
 
-	latestManual := []models.Problemreport{}
+	latestManual := []models.ProblemReport{}
 	GetDB().Table("problemreport").Where("device = '' AND timestamp > ?", queryStart).Find(&latestManual)
 
 	return append(latestFromDevices, latestManual...), nil

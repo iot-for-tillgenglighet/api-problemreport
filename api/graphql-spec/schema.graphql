@@ -1,31 +1,27 @@
-type Device @key(fields: "id") {
-  id: ID!
-}
-
 type WGS84Position {
   lon: Float!
   lat: Float!
 }
 
-type Origin {
-  device: Device
-  pos: WGS84Position
+input ReportPosition {
+  lat: Float!
+  lon: Float!
+}
+type ProblemReport @key(fields: "id") {
+  id: ID!
+  pos: WGS84Position!
+  type: String!
 }
 
-scalar DateTime
-
-interface Telemetry {
-  from: Origin!
-  when: DateTime!
-}
-
-type Problemreport implements Telemetry {
-  from: Origin!
-  when: DateTime!
-  depth: Float!
-  manual: Boolean
+input ProblemReportCreateResource {
+  pos: ReportPosition!
+  type: String!
 }
 
 type Query @extends {
-  snowdepths: [Problemreport]!
+  getAll: [ProblemReport]!
+}
+
+type Mutation @extends {
+  create(input: ProblemReportCreateResource!): ProblemReport!
 }

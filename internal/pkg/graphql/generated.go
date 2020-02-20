@@ -37,6 +37,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Entity() EntityResolver
+	Mutation() MutationResolver
 	Query() QueryResolver
 }
 
@@ -44,28 +45,22 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Device struct {
-		ID func(childComplexity int) int
-	}
-
 	Entity struct {
-		FindDeviceByID func(childComplexity int, id string) int
+		FindProblemReportByID func(childComplexity int, id string) int
 	}
 
-	Origin struct {
-		Device func(childComplexity int) int
-		Pos    func(childComplexity int) int
+	Mutation struct {
+		Create func(childComplexity int, input ProblemReportCreateResource) int
 	}
 
-	Problemreport struct {
-		Depth  func(childComplexity int) int
-		From   func(childComplexity int) int
-		Manual func(childComplexity int) int
-		When   func(childComplexity int) int
+	ProblemReport struct {
+		ID   func(childComplexity int) int
+		Pos  func(childComplexity int) int
+		Type func(childComplexity int) int
 	}
 
 	Query struct {
-		Snowdepths         func(childComplexity int) int
+		GetAll             func(childComplexity int) int
 		__resolve__service func(childComplexity int) int
 		__resolve_entities func(childComplexity int, representations []map[string]interface{}) int
 	}
@@ -81,10 +76,13 @@ type ComplexityRoot struct {
 }
 
 type EntityResolver interface {
-	FindDeviceByID(ctx context.Context, id string) (*Device, error)
+	FindProblemReportByID(ctx context.Context, id string) (*ProblemReport, error)
+}
+type MutationResolver interface {
+	Create(ctx context.Context, input ProblemReportCreateResource) (*ProblemReport, error)
 }
 type QueryResolver interface {
-	Snowdepths(ctx context.Context) ([]*Problemreport, error)
+	GetAll(ctx context.Context) ([]*ProblemReport, error)
 }
 
 type executableSchema struct {
@@ -102,73 +100,57 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Device.id":
-		if e.complexity.Device.ID == nil {
+	case "Entity.findProblemReportByID":
+		if e.complexity.Entity.FindProblemReportByID == nil {
 			break
 		}
 
-		return e.complexity.Device.ID(childComplexity), true
-
-	case "Entity.findDeviceByID":
-		if e.complexity.Entity.FindDeviceByID == nil {
-			break
-		}
-
-		args, err := ec.field_Entity_findDeviceByID_args(context.TODO(), rawArgs)
+		args, err := ec.field_Entity_findProblemReportByID_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Entity.FindDeviceByID(childComplexity, args["id"].(string)), true
+		return e.complexity.Entity.FindProblemReportByID(childComplexity, args["id"].(string)), true
 
-	case "Origin.device":
-		if e.complexity.Origin.Device == nil {
+	case "Mutation.create":
+		if e.complexity.Mutation.Create == nil {
 			break
 		}
 
-		return e.complexity.Origin.Device(childComplexity), true
+		args, err := ec.field_Mutation_create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
 
-	case "Origin.pos":
-		if e.complexity.Origin.Pos == nil {
+		return e.complexity.Mutation.Create(childComplexity, args["input"].(ProblemReportCreateResource)), true
+
+	case "ProblemReport.id":
+		if e.complexity.ProblemReport.ID == nil {
 			break
 		}
 
-		return e.complexity.Origin.Pos(childComplexity), true
+		return e.complexity.ProblemReport.ID(childComplexity), true
 
-	case "Problemreport.depth":
-		if e.complexity.Problemreport.Depth == nil {
+	case "ProblemReport.pos":
+		if e.complexity.ProblemReport.Pos == nil {
 			break
 		}
 
-		return e.complexity.Problemreport.Depth(childComplexity), true
+		return e.complexity.ProblemReport.Pos(childComplexity), true
 
-	case "Problemreport.from":
-		if e.complexity.Problemreport.From == nil {
+	case "ProblemReport.type":
+		if e.complexity.ProblemReport.Type == nil {
 			break
 		}
 
-		return e.complexity.Problemreport.From(childComplexity), true
+		return e.complexity.ProblemReport.Type(childComplexity), true
 
-	case "Problemreport.manual":
-		if e.complexity.Problemreport.Manual == nil {
+	case "Query.getAll":
+		if e.complexity.Query.GetAll == nil {
 			break
 		}
 
-		return e.complexity.Problemreport.Manual(childComplexity), true
-
-	case "Problemreport.when":
-		if e.complexity.Problemreport.When == nil {
-			break
-		}
-
-		return e.complexity.Problemreport.When(childComplexity), true
-
-	case "Query.snowdepths":
-		if e.complexity.Query.Snowdepths == nil {
-			break
-		}
-
-		return e.complexity.Query.Snowdepths(childComplexity), true
+		return e.complexity.Query.GetAll(childComplexity), true
 
 	case "Query._service":
 		if e.complexity.Query.__resolve__service == nil {
@@ -234,6 +216,20 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				Data: buf.Bytes(),
 			}
 		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
 
 	default:
 		return graphql.OneShot(graphql.ErrorResponse(ctx, "unsupported GraphQL operation"))
@@ -265,28 +261,26 @@ directive @external on FIELD_DEFINITION
 directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
 directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
-scalar DateTime
-type Device @key(fields: "id") {
+type Mutation @extends {
+	create(input: ProblemReportCreateResource!): ProblemReport!
+}
+type ProblemReport @key(fields: "id") {
 	id: ID!
+	pos: WGS84Position!
+	type: String!
 }
-type Origin {
-	device: Device
-	pos: WGS84Position
-}
-type Problemreport implements Telemetry {
-	from: Origin!
-	when: DateTime!
-	depth: Float!
-	manual: Boolean
+input ProblemReportCreateResource {
+	pos: ReportPosition!
+	type: String!
 }
 type Query @extends {
-	snowdepths: [Problemreport]!
+	getAll: [ProblemReport]!
 	_entities(representations: [_Any!]!): [_Entity]!
 	_service: _Service!
 }
-interface Telemetry {
-	from: Origin!
-	when: DateTime!
+input ReportPosition {
+	lat: Float!
+	lon: Float!
 }
 type WGS84Position {
 	lon: Float!
@@ -296,7 +290,7 @@ scalar _Any
 """
 A union unifies all @entity types (TODO: interfaces)
 """
-union _Entity = Device
+union _Entity = ProblemReport
 scalar _FieldSet
 type _Service {
 	sdl: String!
@@ -308,7 +302,7 @@ type _Service {
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Entity_findDeviceByID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Entity_findProblemReportByID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -319,6 +313,20 @@ func (ec *executionContext) field_Entity_findDeviceByID_args(ctx context.Context
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 ProblemReportCreateResource
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNProblemReportCreateResource2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReportCreateResource(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -386,7 +394,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Device_id(ctx context.Context, field graphql.CollectedField, obj *Device) (ret graphql.Marshaler) {
+func (ec *executionContext) _Entity_findProblemReportByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -394,7 +402,89 @@ func (ec *executionContext) _Device_id(ctx context.Context, field graphql.Collec
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:   "Device",
+		Object:   "Entity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Entity_findProblemReportByID_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entity().FindProblemReportByID(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ProblemReport)
+	fc.Result = res
+	return ec.marshalNProblemReport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_create_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Create(rctx, args["input"].(ProblemReportCreateResource))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ProblemReport)
+	fc.Result = res
+	return ec.marshalNProblemReport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ProblemReport_id(ctx context.Context, field graphql.CollectedField, obj *ProblemReport) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ProblemReport",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -420,7 +510,7 @@ func (ec *executionContext) _Device_id(ctx context.Context, field graphql.Collec
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Entity_findDeviceByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _ProblemReport_pos(ctx context.Context, field graphql.CollectedField, obj *ProblemReport) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -428,79 +518,7 @@ func (ec *executionContext) _Entity_findDeviceByID(ctx context.Context, field gr
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:   "Entity",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Entity_findDeviceByID_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Entity().FindDeviceByID(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Device)
-	fc.Result = res
-	return ec.marshalNDevice2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐDevice(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Origin_device(ctx context.Context, field graphql.CollectedField, obj *Origin) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Origin",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Device, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*Device)
-	fc.Result = res
-	return ec.marshalODevice2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐDevice(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Origin_pos(ctx context.Context, field graphql.CollectedField, obj *Origin) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Origin",
+		Object:   "ProblemReport",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -516,48 +534,17 @@ func (ec *executionContext) _Origin_pos(ctx context.Context, field graphql.Colle
 		return graphql.Null
 	}
 	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*WGS84Position)
-	fc.Result = res
-	return ec.marshalOWGS84Position2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐWGS84Position(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Problemreport_from(ctx context.Context, field graphql.CollectedField, obj *Problemreport) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Problemreport",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.From, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*Origin)
+	res := resTmp.(*WGS84Position)
 	fc.Result = res
-	return ec.marshalNOrigin2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐOrigin(ctx, field.Selections, res)
+	return ec.marshalNWGS84Position2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐWGS84Position(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Problemreport_when(ctx context.Context, field graphql.CollectedField, obj *Problemreport) (ret graphql.Marshaler) {
+func (ec *executionContext) _ProblemReport_type(ctx context.Context, field graphql.CollectedField, obj *ProblemReport) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -565,7 +552,7 @@ func (ec *executionContext) _Problemreport_when(ctx context.Context, field graph
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:   "Problemreport",
+		Object:   "ProblemReport",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -574,7 +561,7 @@ func (ec *executionContext) _Problemreport_when(ctx context.Context, field graph
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.When, nil
+		return obj.Type, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -588,75 +575,10 @@ func (ec *executionContext) _Problemreport_when(ctx context.Context, field graph
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNDateTime2string(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Problemreport_depth(ctx context.Context, field graphql.CollectedField, obj *Problemreport) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Problemreport",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Depth, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Problemreport_manual(ctx context.Context, field graphql.CollectedField, obj *Problemreport) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Problemreport",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Manual, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_snowdepths(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getAll(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -673,7 +595,7 @@ func (ec *executionContext) _Query_snowdepths(ctx context.Context, field graphql
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Snowdepths(rctx)
+		return ec.resolvers.Query().GetAll(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -685,9 +607,9 @@ func (ec *executionContext) _Query_snowdepths(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Problemreport)
+	res := resTmp.([]*ProblemReport)
 	fc.Result = res
-	return ec.marshalNProblemreport2ᚕᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemreport(ctx, field.Selections, res)
+	return ec.marshalNProblemReport2ᚕᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query__entities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1991,37 +1913,69 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputProblemReportCreateResource(ctx context.Context, obj interface{}) (ProblemReportCreateResource, error) {
+	var it ProblemReportCreateResource
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "pos":
+			var err error
+			it.Pos, err = ec.unmarshalNReportPosition2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐReportPosition(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+			it.Type, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputReportPosition(ctx context.Context, obj interface{}) (ReportPosition, error) {
+	var it ReportPosition
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "lat":
+			var err error
+			it.Lat, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "lon":
+			var err error
+			it.Lon, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
-
-func (ec *executionContext) _Telemetry(ctx context.Context, sel ast.SelectionSet, obj Telemetry) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case Problemreport:
-		return ec._Problemreport(ctx, sel, &obj)
-	case *Problemreport:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Problemreport(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
 
 func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, obj _Entity) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case Device:
-		return ec._Device(ctx, sel, &obj)
-	case *Device:
+	case ProblemReport:
+		return ec._ProblemReport(ctx, sel, &obj)
+	case *ProblemReport:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Device(ctx, sel, obj)
+		return ec._ProblemReport(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -2030,33 +1984,6 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
-
-var deviceImplementors = []string{"Device", "_Entity"}
-
-func (ec *executionContext) _Device(ctx context.Context, sel ast.SelectionSet, obj *Device) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, deviceImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Device")
-		case "id":
-			out.Values[i] = ec._Device_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
 
 var entityImplementors = []string{"Entity"}
 
@@ -2073,7 +2000,7 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Entity")
-		case "findDeviceByID":
+		case "findProblemReportByID":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -2081,7 +2008,7 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Entity_findDeviceByID(ctx, field)
+				res = ec._Entity_findProblemReportByID(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2098,21 +2025,26 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 	return out
 }
 
-var originImplementors = []string{"Origin"}
+var mutationImplementors = []string{"Mutation"}
 
-func (ec *executionContext) _Origin(ctx context.Context, sel ast.SelectionSet, obj *Origin) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, originImplementors)
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mutationImplementors)
+
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Mutation",
+	})
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Origin")
-		case "device":
-			out.Values[i] = ec._Origin_device(ctx, field, obj)
-		case "pos":
-			out.Values[i] = ec._Origin_pos(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "create":
+			out.Values[i] = ec._Mutation_create(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2124,34 +2056,32 @@ func (ec *executionContext) _Origin(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
-var problemreportImplementors = []string{"Problemreport", "Telemetry"}
+var problemReportImplementors = []string{"ProblemReport", "_Entity"}
 
-func (ec *executionContext) _Problemreport(ctx context.Context, sel ast.SelectionSet, obj *Problemreport) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, problemreportImplementors)
+func (ec *executionContext) _ProblemReport(ctx context.Context, sel ast.SelectionSet, obj *ProblemReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, problemReportImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Problemreport")
-		case "from":
-			out.Values[i] = ec._Problemreport_from(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("ProblemReport")
+		case "id":
+			out.Values[i] = ec._ProblemReport_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "when":
-			out.Values[i] = ec._Problemreport_when(ctx, field, obj)
+		case "pos":
+			out.Values[i] = ec._ProblemReport_pos(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "depth":
-			out.Values[i] = ec._Problemreport_depth(ctx, field, obj)
+		case "type":
+			out.Values[i] = ec._ProblemReport_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "manual":
-			out.Values[i] = ec._Problemreport_manual(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2178,7 +2108,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "snowdepths":
+		case "getAll":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -2186,7 +2116,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_snowdepths(ctx, field)
+				res = ec._Query_getAll(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -2553,34 +2483,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNDateTime2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
-}
-
-func (ec *executionContext) marshalNDateTime2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) marshalNDevice2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐDevice(ctx context.Context, sel ast.SelectionSet, v Device) graphql.Marshaler {
-	return ec._Device(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDevice2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐDevice(ctx context.Context, sel ast.SelectionSet, v *Device) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Device(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
 	return graphql.UnmarshalFloat(v)
 }
@@ -2609,21 +2511,11 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNOrigin2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐOrigin(ctx context.Context, sel ast.SelectionSet, v Origin) graphql.Marshaler {
-	return ec._Origin(ctx, sel, &v)
+func (ec *executionContext) marshalNProblemReport2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx context.Context, sel ast.SelectionSet, v ProblemReport) graphql.Marshaler {
+	return ec._ProblemReport(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOrigin2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐOrigin(ctx context.Context, sel ast.SelectionSet, v *Origin) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Origin(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNProblemreport2ᚕᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemreport(ctx context.Context, sel ast.SelectionSet, v []*Problemreport) graphql.Marshaler {
+func (ec *executionContext) marshalNProblemReport2ᚕᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx context.Context, sel ast.SelectionSet, v []*ProblemReport) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2647,7 +2539,7 @@ func (ec *executionContext) marshalNProblemreport2ᚕᚖgithubᚗcomᚋiotᚑfor
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOProblemreport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemreport(ctx, sel, v[i])
+			ret[i] = ec.marshalOProblemReport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2658,6 +2550,32 @@ func (ec *executionContext) marshalNProblemreport2ᚕᚖgithubᚗcomᚋiotᚑfor
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalNProblemReport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx context.Context, sel ast.SelectionSet, v *ProblemReport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ProblemReport(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNProblemReportCreateResource2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReportCreateResource(ctx context.Context, v interface{}) (ProblemReportCreateResource, error) {
+	return ec.unmarshalInputProblemReportCreateResource(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNReportPosition2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐReportPosition(ctx context.Context, v interface{}) (ReportPosition, error) {
+	return ec.unmarshalInputReportPosition(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNReportPosition2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐReportPosition(ctx context.Context, v interface{}) (*ReportPosition, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNReportPosition2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐReportPosition(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -2672,6 +2590,20 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNWGS84Position2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐWGS84Position(ctx context.Context, sel ast.SelectionSet, v WGS84Position) graphql.Marshaler {
+	return ec._WGS84Position(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWGS84Position2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐWGS84Position(ctx context.Context, sel ast.SelectionSet, v *WGS84Position) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._WGS84Position(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalN_Any2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
@@ -3030,26 +2962,15 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalODevice2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐDevice(ctx context.Context, sel ast.SelectionSet, v Device) graphql.Marshaler {
-	return ec._Device(ctx, sel, &v)
+func (ec *executionContext) marshalOProblemReport2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx context.Context, sel ast.SelectionSet, v ProblemReport) graphql.Marshaler {
+	return ec._ProblemReport(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalODevice2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐDevice(ctx context.Context, sel ast.SelectionSet, v *Device) graphql.Marshaler {
+func (ec *executionContext) marshalOProblemReport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx context.Context, sel ast.SelectionSet, v *ProblemReport) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec._Device(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOProblemreport2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemreport(ctx context.Context, sel ast.SelectionSet, v Problemreport) graphql.Marshaler {
-	return ec._Problemreport(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOProblemreport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemreport(ctx context.Context, sel ast.SelectionSet, v *Problemreport) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Problemreport(ctx, sel, v)
+	return ec._ProblemReport(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
@@ -3073,17 +2994,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
-}
-
-func (ec *executionContext) marshalOWGS84Position2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐWGS84Position(ctx context.Context, sel ast.SelectionSet, v WGS84Position) graphql.Marshaler {
-	return ec._WGS84Position(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOWGS84Position2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐWGS84Position(ctx context.Context, sel ast.SelectionSet, v *WGS84Position) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._WGS84Position(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO_Entity2githubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐ_Entity(ctx context.Context, sel ast.SelectionSet, v _Entity) graphql.Marshaler {
