@@ -17,6 +17,7 @@ type ProblemReport struct {
 //ProblemReportCategory Base object for problem report category
 type ProblemReportCategory struct {
 	gorm.Model
-	Name    string
-	Enabled bool
+	Label      string
+	ReportType string
+	Enabled    bool
 }

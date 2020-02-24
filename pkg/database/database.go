@@ -47,6 +47,7 @@ func ConnectToDB() {
 		} else {
 			db = conn
 			db.Debug().AutoMigrate(&models.ProblemReport{})
+			db.Debug().AutoMigrate(&models.ProblemReportCategory{})
 			return
 		}
 		defer conn.Close()
@@ -70,6 +71,14 @@ func GetAll() ([]models.ProblemReport, error) {
 
 	entities := []models.ProblemReport{}
 	GetDB().Table("problem_reports").Select("*").Find(&entities)
+
+	return entities, nil
+}
+
+//GetCategories fetches all categories
+func GetCategories() ([]models.ProblemReportCategory, error) {
+	entities := []models.ProblemReportCategory{}
+	GetDB().Table("problem_report_categories").Where("enabled = ?", true).Find(&entities)
 
 	return entities, nil
 }

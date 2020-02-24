@@ -11,8 +11,8 @@ type ProblemReport @key(fields: "id") {
 
 type ProblemReportCategory @key(fields: "id"){
   id: ID!
-  name: String!
-  enabled: Boolean
+  label: String!
+  reportType: String!
 }
 
 input ReportPosition {

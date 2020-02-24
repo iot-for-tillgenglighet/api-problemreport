@@ -67,7 +67,25 @@ func (r *queryResolver) GetAll(ctx context.Context) ([]*ProblemReport, error) {
 }
 
 func (r *queryResolver) GetCategories(ctx context.Context) ([]*ProblemReportCategory, error) {
-	panic("Not implemented")
+	entities, err := database.GetCategories()
+
+	if err != nil {
+		panic("Query failed: " + err.Error())
+	}
+
+	count := len(entities)
+
+	if count == 0 {
+		return []*ProblemReportCategory{}, nil
+	}
+
+	resources := make([]*ProblemReportCategory, 0, count)
+
+	for _, v := range entities {
+		resources = append(resources, convertCategoryEntityToGQL(&v))
+	}
+
+	return resources, nil
 }
 
 func convertEntityToGQL(entity *models.ProblemReport) *ProblemReport {
@@ -81,6 +99,19 @@ func convertEntityToGQL(entity *models.ProblemReport) *ProblemReport {
 			Lon: entity.Longitude,
 		},
 		Type: entity.Type,
+	}
+
+	return resource
+}
+
+func convertCategoryEntityToGQL(entity *models.ProblemReportCategory) *ProblemReportCategory {
+	if entity == nil {
+		panic("Missing model")
+	}
+
+	resource := &ProblemReportCategory{
+		Label:      entity.Label,
+		ReportType: entity.ReportType,
 	}
 
 	return resource

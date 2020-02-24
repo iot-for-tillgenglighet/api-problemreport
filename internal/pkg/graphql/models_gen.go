@@ -8,8 +8,8 @@ type _Entity interface {
 }
 
 type Entity struct {
-	FindProblemReportByID         *ProblemReport         `json:"findProblemReportByID"`
 	FindProblemReportCategoryByID *ProblemReportCategory `json:"findProblemReportCategoryByID"`
+	FindProblemReportByID         *ProblemReport         `json:"findProblemReportByID"`
 }
 
 type ProblemReport struct {
@@ -21,9 +21,9 @@ type ProblemReport struct {
 func (ProblemReport) Is_Entity() {}
 
 type ProblemReportCategory struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Enabled *bool  `json:"enabled"`
+	ID         string `json:"id"`
+	Label      string `json:"label"`
+	ReportType string `json:"reportType"`
 }
 
 func (ProblemReportCategory) Is_Entity() {}

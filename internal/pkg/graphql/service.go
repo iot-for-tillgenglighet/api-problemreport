@@ -24,8 +24,8 @@ type ProblemReport @key(fields: "id") {
 }
 type ProblemReportCategory @key(fields: "id") {
 	id: ID!
-	name: String!
-	enabled: Boolean
+	label: String!
+	reportType: String!
 }
 input ProblemReportCreateResource {
 	pos: ReportPosition!
@@ -56,24 +56,24 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 		}
 		switch typeName {
 
-		case "ProblemReport":
-			id, ok := rep["id"].(string)
-			if !ok {
-				return nil, errors.New("opsies")
-			}
-			resp, err := ec.resolvers.Entity().FindProblemReportByID(ctx, id)
-			if err != nil {
-				return nil, err
-			}
-
-			list = append(list, resp)
-
 		case "ProblemReportCategory":
 			id, ok := rep["id"].(string)
 			if !ok {
 				return nil, errors.New("opsies")
 			}
 			resp, err := ec.resolvers.Entity().FindProblemReportCategoryByID(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+
+			list = append(list, resp)
+
+		case "ProblemReport":
+			id, ok := rep["id"].(string)
+			if !ok {
+				return nil, errors.New("opsies")
+			}
+			resp, err := ec.resolvers.Entity().FindProblemReportByID(ctx, id)
 			if err != nil {
 				return nil, err
 			}

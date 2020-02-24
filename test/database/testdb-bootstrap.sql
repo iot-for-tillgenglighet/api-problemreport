@@ -1,0 +1,2 @@
+TRUNCATE TABLE problem_report_categories RESTART IDENTITY;
+INSERT INTO problem_report_categories(created_at, updated_at, label,report_type,enabled) VALUES(NOW(),NOW(),'Halka','TYPE_ICE', true),(NOW(),NOW(),'Vägskada', 'TYPE_ROAD', true), (NOW(),NOW(),'Otrygghet', 'TYPE_SAFETY', true)
