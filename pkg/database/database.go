@@ -69,25 +69,7 @@ func Create(entity *models.ProblemReport) (*models.ProblemReport, error) {
 func GetAll() ([]models.ProblemReport, error) {
 
 	entities := []models.ProblemReport{}
-	GetDB().Table("problemreport").Select("*").Find(&entities)
+	GetDB().Table("problem_reports").Select("*").Find(&entities)
 
 	return entities, nil
-}
-
-//GetLatestSnowdepths returns the most recent value for all sensors, as well as
-//all manually added values during the last 24 hours
-func GetLatestSnowdepths() ([]models.ProblemReport, error) {
-
-	// Get depths from the last 24 hours
-	queryStart := time.Now().UTC().AddDate(0, 0, -1).Format(time.RFC3339)
-
-	// TODO: Implement this as a single operation instead
-
-	latestFromDevices := []models.ProblemReport{}
-	GetDB().Table("problemreport").Select("DISTINCT ON (device) *").Where("device <> '' AND timestamp > ?", queryStart).Order("device, timestamp desc").Find(&latestFromDevices)
-
-	latestManual := []models.ProblemReport{}
-	GetDB().Table("problemreport").Where("device = '' AND timestamp > ?", queryStart).Find(&latestManual)
-
-	return append(latestFromDevices, latestManual...), nil
 }

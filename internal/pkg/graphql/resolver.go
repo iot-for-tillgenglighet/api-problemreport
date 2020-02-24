@@ -57,5 +57,25 @@ func (r *mutationResolver) Create(ctx context.Context, input ProblemReportCreate
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) GetAll(ctx context.Context) ([]*ProblemReport, error) {
-	panic("not implemented")
+
+	entities, err := database.GetAll()
+
+	if err != nil {
+		panic("Query failed: " + err.Error())
+	}
+
+	count := len(entities)
+
+	if count == 0 {
+		return []*ProblemReport{}, nil
+	}
+
+	resources := make([]*ProblemReport, 0, count)
+
+	for _, v := range entities {
+		resources = append(resources, convertEntityToGQL(&v))
+	}
+
+	return resources, nil
+
 }
