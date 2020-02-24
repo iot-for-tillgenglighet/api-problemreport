@@ -8,7 +8,8 @@ type _Entity interface {
 }
 
 type Entity struct {
-	FindProblemReportByID *ProblemReport `json:"findProblemReportByID"`
+	FindProblemReportByID         *ProblemReport         `json:"findProblemReportByID"`
+	FindProblemReportCategoryByID *ProblemReportCategory `json:"findProblemReportCategoryByID"`
 }
 
 type ProblemReport struct {
@@ -18,6 +19,14 @@ type ProblemReport struct {
 }
 
 func (ProblemReport) Is_Entity() {}
+
+type ProblemReportCategory struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Enabled *bool  `json:"enabled"`
+}
+
+func (ProblemReportCategory) Is_Entity() {}
 
 type ProblemReportCreateResource struct {
 	Pos  *ReportPosition `json:"pos"`

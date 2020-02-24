@@ -22,12 +22,18 @@ type ProblemReport @key(fields: "id") {
 	pos: WGS84Position!
 	type: String!
 }
+type ProblemReportCategory @key(fields: "id") {
+	id: ID!
+	name: String!
+	enabled: Boolean
+}
 input ProblemReportCreateResource {
 	pos: ReportPosition!
 	type: String!
 }
 type Query @extends {
 	getAll: [ProblemReport]!
+	getCategories: [ProblemReportCategory]!
 }
 input ReportPosition {
 	lat: Float!
@@ -56,6 +62,18 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 				return nil, errors.New("opsies")
 			}
 			resp, err := ec.resolvers.Entity().FindProblemReportByID(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+
+			list = append(list, resp)
+
+		case "ProblemReportCategory":
+			id, ok := rep["id"].(string)
+			if !ok {
+				return nil, errors.New("opsies")
+			}
+			resp, err := ec.resolvers.Entity().FindProblemReportCategoryByID(ctx, id)
 			if err != nil {
 				return nil, err
 			}

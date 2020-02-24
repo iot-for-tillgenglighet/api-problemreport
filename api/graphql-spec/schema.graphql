@@ -3,14 +3,21 @@ type WGS84Position {
   lat: Float!
 }
 
-input ReportPosition {
-  lat: Float!
-  lon: Float!
-}
 type ProblemReport @key(fields: "id") {
   id: ID!
   pos: WGS84Position!
   type: String!
+}
+
+type ProblemReportCategory @key(fields: "id"){
+  id: ID!
+  name: String!
+  enabled: Boolean
+}
+
+input ReportPosition {
+  lat: Float!
+  lon: Float!
 }
 
 input ProblemReportCreateResource {
@@ -20,8 +27,11 @@ input ProblemReportCreateResource {
 
 type Query @extends {
   getAll: [ProblemReport]!
+  getCategories: [ProblemReportCategory]!
 }
 
 type Mutation @extends {
   create(input: ProblemReportCreateResource!): ProblemReport!
 }
+
+

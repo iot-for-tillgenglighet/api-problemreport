@@ -24,24 +24,11 @@ type entityResolver struct{ *Resolver }
 func (r *entityResolver) FindProblemReportByID(ctx context.Context, id string) (*ProblemReport, error) {
 	panic("not implemented")
 }
+func (r *entityResolver) FindProblemReportCategoryByID(ctx context.Context, id string) (*ProblemReportCategory, error) {
+	panic("not implemented")
+}
 
 type mutationResolver struct{ *Resolver }
-
-func convertEntityToGQL(entity *models.ProblemReport) *ProblemReport {
-	if entity == nil {
-		panic("Missing model")
-	}
-
-	resource := &ProblemReport{
-		Pos: &WGS84Position{
-			Lat: entity.Latitude,
-			Lon: entity.Longitude,
-		},
-		Type: entity.Type,
-	}
-
-	return resource
-}
 
 func (r *mutationResolver) Create(ctx context.Context, input ProblemReportCreateResource) (*ProblemReport, error) {
 	entity := &models.ProblemReport{
@@ -77,5 +64,24 @@ func (r *queryResolver) GetAll(ctx context.Context) ([]*ProblemReport, error) {
 	}
 
 	return resources, nil
+}
 
+func (r *queryResolver) GetCategories(ctx context.Context) ([]*ProblemReportCategory, error) {
+	panic("Not implemented")
+}
+
+func convertEntityToGQL(entity *models.ProblemReport) *ProblemReport {
+	if entity == nil {
+		panic("Missing model")
+	}
+
+	resource := &ProblemReport{
+		Pos: &WGS84Position{
+			Lat: entity.Latitude,
+			Lon: entity.Longitude,
+		},
+		Type: entity.Type,
+	}
+
+	return resource
 }
