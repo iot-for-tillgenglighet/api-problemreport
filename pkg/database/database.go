@@ -54,15 +54,17 @@ func ConnectToDB() {
 }
 
 //Create creates a report
-func Create(latitude float64, longitude float64, problemType string) (*models.ProblemReport, error) {
+func Create(entity *models.ProblemReport) (*models.ProblemReport, error) {
 
 	currentTime := time.Now().UTC()
 
-	entity := &models.ProblemReport{
-		Latitude:  latitude,
-		Longitude: longitude,
-		Type:      problemType,
-		Timestamp: currentTime.Format(time.RFC3339)}
+	entity.Timestamp = currentTime.Format(time.RFC3339)
+
+	/*entity := &models.ProblemReport{
+	Latitude:  latitude,
+	Longitude: longitude,
+	Type:      problemType,
+	Timestamp: currentTime.Format(time.RFC3339)}*/
 
 	GetDB().Create(entity)
 

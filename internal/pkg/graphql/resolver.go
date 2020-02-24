@@ -3,6 +3,7 @@ package graphql
 import (
 	"context"
 
+	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/models"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
@@ -27,12 +28,30 @@ func (r *entityResolver) FindProblemReportByID(ctx context.Context, id string) (
 type mutationResolver struct{ *Resolver }
 
 func convertEntityToGQL(entity *models.ProblemReport) *ProblemReport {
+	if entity == nil {
+		panic("Missing model")
+	}
 
+	resource := &ProblemReport{
+		Pos: &WGS84Position{
+			Lat: entity.Latitude,
+			Lon: entity.Longitude,
+		},
+		Type: entity.Type,
+	}
+
+	return resource
 }
 
 func (r *mutationResolver) Create(ctx context.Context, input ProblemReportCreateResource) (*ProblemReport, error) {
-	panic("not implemented")
+	entity := &models.ProblemReport{
+		Latitude:  input.Pos.Lat,
+		Longitude: input.Pos.Lon,
+		Type:      input.Type,
+	}
 
+	savedEntity, err := database.Create(entity)
+	return convertEntityToGQL(savedEntity), err
 }
 
 type queryResolver struct{ *Resolver }
