@@ -60,12 +60,6 @@ func Create(entity *models.ProblemReport) (*models.ProblemReport, error) {
 
 	entity.Timestamp = currentTime.Format(time.RFC3339)
 
-	/*entity := &models.ProblemReport{
-	Latitude:  latitude,
-	Longitude: longitude,
-	Type:      problemType,
-	Timestamp: currentTime.Format(time.RFC3339)}*/
-
 	GetDB().Create(entity)
 
 	return entity, nil
