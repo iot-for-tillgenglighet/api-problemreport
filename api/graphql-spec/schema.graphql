@@ -28,6 +28,7 @@ input ProblemReportCreateResource {
 type Query @extends {
   getAll: [ProblemReport]!
   getCategories: [ProblemReportCategory]!
+  getAllByPeriod: [ProblemReport]!
 }
 
 type Mutation @extends {

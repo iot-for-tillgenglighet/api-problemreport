@@ -76,6 +76,14 @@ func GetAll() ([]models.ProblemReport, error) {
 	return entities, nil
 }
 
+//GetAllByPeriod Fetches all problem reports by period
+func GetAllByPeriod(startDate time.Time, endDate time.Time) ([]models.ProblemReport, error) {
+	entities := []models.ProblemReport{}
+	GetDB().Table("problem_reports").Where("updated_at BETWEEN ? AND ?", startDate, endDate).Find(&entities)
+
+	return entities, nil
+}
+
 //GetCategories fetches all categories
 func GetCategories() ([]models.ProblemReportCategory, error) {
 	entities := []models.ProblemReportCategory{}
