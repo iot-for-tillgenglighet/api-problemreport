@@ -34,7 +34,6 @@ input ProblemReportCreateResource {
 type Query @extends {
 	getAll: [ProblemReport]!
 	getCategories: [ProblemReportCategory]!
-	getAllByPeriod: [ProblemReport]!
 }
 input ReportPosition {
 	lat: Float!

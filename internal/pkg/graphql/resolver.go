@@ -2,7 +2,6 @@ package graphql
 
 import (
 	"context"
-	"time"
 
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/database"
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/models"
@@ -47,29 +46,6 @@ type queryResolver struct{ *Resolver }
 func (r *queryResolver) GetAll(ctx context.Context) ([]*ProblemReport, error) {
 
 	entities, err := database.GetAll()
-
-	if err != nil {
-		panic("Query failed: " + err.Error())
-	}
-
-	count := len(entities)
-
-	if count == 0 {
-		return []*ProblemReport{}, nil
-	}
-
-	resources := make([]*ProblemReport, 0, count)
-
-	for _, v := range entities {
-		resources = append(resources, convertEntityToGQL(&v))
-	}
-
-	return resources, nil
-}
-
-func (r *queryResolver) GetAllByPeriod(ctx context.Context, startDate time.Time, endDate time.Time) ([]*ProblemReport, error) {
-
-	entities, err := database.GetAllByPeriod(startDate, endDate)
 
 	if err != nil {
 		panic("Query failed: " + err.Error())

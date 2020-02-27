@@ -68,7 +68,6 @@ type ComplexityRoot struct {
 
 	Query struct {
 		GetAll             func(childComplexity int) int
-		GetAllByPeriod     func(childComplexity int) int
 		GetCategories      func(childComplexity int) int
 		__resolve__service func(childComplexity int) int
 		__resolve_entities func(childComplexity int, representations []map[string]interface{}) int
@@ -94,7 +93,6 @@ type MutationResolver interface {
 type QueryResolver interface {
 	GetAll(ctx context.Context) ([]*ProblemReport, error)
 	GetCategories(ctx context.Context) ([]*ProblemReportCategory, error)
-	GetAllByPeriod(ctx context.Context) ([]*ProblemReport, error)
 }
 
 type executableSchema struct {
@@ -196,13 +194,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetAll(childComplexity), true
-
-	case "Query.getAllByPeriod":
-		if e.complexity.Query.GetAllByPeriod == nil {
-			break
-		}
-
-		return e.complexity.Query.GetAllByPeriod(childComplexity), true
 
 	case "Query.getCategories":
 		if e.complexity.Query.GetCategories == nil {
@@ -340,7 +331,6 @@ input ProblemReportCreateResource {
 type Query @extends {
 	getAll: [ProblemReport]!
 	getCategories: [ProblemReportCategory]!
-	getAllByPeriod: [ProblemReport]!
 	_entities(representations: [_Any!]!): [_Entity]!
 	_service: _Service!
 }
@@ -867,40 +857,6 @@ func (ec *executionContext) _Query_getCategories(ctx context.Context, field grap
 	res := resTmp.([]*ProblemReportCategory)
 	fc.Result = res
 	return ec.marshalNProblemReportCategory2ᚕᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReportCategory(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_getAllByPeriod(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetAllByPeriod(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*ProblemReport)
-	fc.Result = res
-	return ec.marshalNProblemReport2ᚕᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query__entities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2480,20 +2436,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getCategories(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "getAllByPeriod":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getAllByPeriod(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
