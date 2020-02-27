@@ -56,24 +56,24 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 		}
 		switch typeName {
 
-		case "ProblemReportCategory":
-			id, ok := rep["id"].(string)
-			if !ok {
-				return nil, errors.New("opsies")
-			}
-			resp, err := ec.resolvers.Entity().FindProblemReportCategoryByID(ctx, id)
-			if err != nil {
-				return nil, err
-			}
-
-			list = append(list, resp)
-
 		case "ProblemReport":
 			id, ok := rep["id"].(string)
 			if !ok {
 				return nil, errors.New("opsies")
 			}
 			resp, err := ec.resolvers.Entity().FindProblemReportByID(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+
+			list = append(list, resp)
+
+		case "ProblemReportCategory":
+			id, ok := rep["id"].(string)
+			if !ok {
+				return nil, errors.New("opsies")
+			}
+			resp, err := ec.resolvers.Entity().FindProblemReportCategoryByID(ctx, id)
 			if err != nil {
 				return nil, err
 			}

@@ -84,8 +84,8 @@ type ComplexityRoot struct {
 }
 
 type EntityResolver interface {
-	FindProblemReportCategoryByID(ctx context.Context, id string) (*ProblemReportCategory, error)
 	FindProblemReportByID(ctx context.Context, id string) (*ProblemReport, error)
+	FindProblemReportCategoryByID(ctx context.Context, id string) (*ProblemReportCategory, error)
 }
 type MutationResolver interface {
 	Create(ctx context.Context, input ProblemReportCreateResource) (*ProblemReport, error)
@@ -346,7 +346,7 @@ scalar _Any
 """
 A union unifies all @entity types (TODO: interfaces)
 """
-union _Entity = ProblemReportCategory | ProblemReport
+union _Entity = ProblemReport | ProblemReportCategory
 scalar _FieldSet
 type _Service {
 	sdl: String!
@@ -464,47 +464,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Entity_findProblemReportCategoryByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Entity",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Entity_findProblemReportCategoryByID_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Entity().FindProblemReportCategoryByID(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*ProblemReportCategory)
-	fc.Result = res
-	return ec.marshalNProblemReportCategory2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReportCategory(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Entity_findProblemReportByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -544,6 +503,47 @@ func (ec *executionContext) _Entity_findProblemReportByID(ctx context.Context, f
 	res := resTmp.(*ProblemReport)
 	fc.Result = res
 	return ec.marshalNProblemReport2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Entity_findProblemReportCategoryByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Entity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Entity_findProblemReportCategoryByID_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entity().FindProblemReportCategoryByID(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ProblemReportCategory)
+	fc.Result = res
+	return ec.marshalNProblemReportCategory2ᚖgithubᚗcomᚋiotᚑforᚑtillgenglighetᚋapiᚑproblemreportᚋinternalᚋpkgᚋgraphqlᚐProblemReportCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2216,13 +2216,6 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case ProblemReportCategory:
-		return ec._ProblemReportCategory(ctx, sel, &obj)
-	case *ProblemReportCategory:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._ProblemReportCategory(ctx, sel, obj)
 	case ProblemReport:
 		return ec._ProblemReport(ctx, sel, &obj)
 	case *ProblemReport:
@@ -2230,6 +2223,13 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 			return graphql.Null
 		}
 		return ec._ProblemReport(ctx, sel, obj)
+	case ProblemReportCategory:
+		return ec._ProblemReportCategory(ctx, sel, &obj)
+	case *ProblemReportCategory:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ProblemReportCategory(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -2254,20 +2254,6 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Entity")
-		case "findProblemReportCategoryByID":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Entity_findProblemReportCategoryByID(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "findProblemReportByID":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2277,6 +2263,20 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 					}
 				}()
 				res = ec._Entity_findProblemReportByID(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "findProblemReportCategoryByID":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Entity_findProblemReportCategoryByID(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

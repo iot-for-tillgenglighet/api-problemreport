@@ -8,8 +8,8 @@ type _Entity interface {
 }
 
 type Entity struct {
-	FindProblemReportCategoryByID *ProblemReportCategory `json:"findProblemReportCategoryByID"`
 	FindProblemReportByID         *ProblemReport         `json:"findProblemReportByID"`
+	FindProblemReportCategoryByID *ProblemReportCategory `json:"findProblemReportCategoryByID"`
 }
 
 type ProblemReport struct {
