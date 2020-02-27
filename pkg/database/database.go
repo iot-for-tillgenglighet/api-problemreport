@@ -46,43 +46,48 @@ func ConnectToDB() {
 			time.Sleep(3 * time.Second)
 		} else {
 			db = conn
-			db.Debug().AutoMigrate(&models.Problemreport{})
+			db.Debug().AutoMigrate(&models.ProblemReport{})
+			db.Debug().AutoMigrate(&models.ProblemReportCategory{})
+			db.Debug().Exec("TRUNCATE TABLE problem_report_categories RESTART IDENTITY; INSERT INTO problem_report_categories(created_at, updated_at, label,report_type,enabled) VALUES(NOW(),NOW(),'Halka','TYPE_ICE', true),(NOW(),NOW(),'Vägskada', 'TYPE_ROAD', true), (NOW(),NOW(),'Otrygghet', 'TYPE_SAFETY', true)")
 			return
 		}
 		defer conn.Close()
 	}
 }
 
-//AddManualSnowdepthMeasurement takes a position and a depth and adds a record to the database
-func AddManualSnowdepthMeasurement(latitude, longitude, depth float64) (*models.Problemreport, error) {
-	t := time.Now().UTC()
+//Create creates a report
+func Create(entity *models.ProblemReport) (*models.ProblemReport, error) {
 
-	measurement := &models.Problemreport{
-		Latitude:  latitude,
-		Longitude: longitude,
-		Depth:     float32(depth),
-		Timestamp: t.Format(time.RFC3339),
-	}
+	currentTime := time.Now().UTC()
 
-	GetDB().Create(measurement)
+	entity.Timestamp = currentTime.Format(time.RFC3339)
 
-	return measurement, nil
+	GetDB().Create(entity)
+
+	return entity, nil
 }
 
-//GetLatestSnowdepths returns the most recent value for all sensors, as well as
-//all manually added values during the last 24 hours
-func GetLatestSnowdepths() ([]models.Problemreport, error) {
+//GetAll Fetches all problemreports
+func GetAll() ([]models.ProblemReport, error) {
 
-	// Get depths from the last 24 hours
-	queryStart := time.Now().UTC().AddDate(0, 0, -1).Format(time.RFC3339)
+	entities := []models.ProblemReport{}
+	GetDB().Table("problem_reports").Select("*").Find(&entities)
 
-	// TODO: Implement this as a single operation instead
+	return entities, nil
+}
 
-	latestFromDevices := []models.Problemreport{}
-	GetDB().Table("problemreport").Select("DISTINCT ON (device) *").Where("device <> '' AND timestamp > ?", queryStart).Order("device, timestamp desc").Find(&latestFromDevices)
+//GetAllByPeriod Fetches all problem reports by period
+func GetAllByPeriod(startDate time.Time, endDate time.Time) ([]models.ProblemReport, error) {
+	entities := []models.ProblemReport{}
+	GetDB().Table("problem_reports").Where("updated_at BETWEEN ? AND ?", startDate, endDate).Find(&entities)
 
-	latestManual := []models.Problemreport{}
-	GetDB().Table("problemreport").Where("device = '' AND timestamp > ?", queryStart).Find(&latestManual)
+	return entities, nil
+}
 
-	return append(latestFromDevices, latestManual...), nil
+//GetCategories fetches all categories
+func GetCategories() ([]models.ProblemReportCategory, error) {
+	entities := []models.ProblemReportCategory{}
+	GetDB().Table("problem_report_categories").Where("enabled = ?", true).Find(&entities)
+
+	return entities, nil
 }

@@ -2,38 +2,41 @@
 
 package graphql
 
-type Telemetry interface {
-	IsTelemetry()
-}
-
 // _Entity represents all types with @key
 type _Entity interface {
 	Is_Entity()
 }
 
-type Device struct {
-	ID string `json:"id"`
-}
-
-func (Device) Is_Entity() {}
-
 type Entity struct {
-	FindDeviceByID *Device `json:"findDeviceByID"`
+	FindProblemReportByID         *ProblemReport         `json:"findProblemReportByID"`
+	FindProblemReportCategoryByID *ProblemReportCategory `json:"findProblemReportCategoryByID"`
 }
 
-type Origin struct {
-	Device *Device        `json:"device"`
-	Pos    *WGS84Position `json:"pos"`
+type ProblemReport struct {
+	ID   string         `json:"id"`
+	Pos  *WGS84Position `json:"pos"`
+	Type string         `json:"type"`
 }
 
-type Problemreport struct {
-	From   *Origin `json:"from"`
-	When   string  `json:"when"`
-	Depth  float64 `json:"depth"`
-	Manual *bool   `json:"manual"`
+func (ProblemReport) Is_Entity() {}
+
+type ProblemReportCategory struct {
+	ID         string `json:"id"`
+	Label      string `json:"label"`
+	ReportType string `json:"reportType"`
 }
 
-func (Problemreport) IsTelemetry() {}
+func (ProblemReportCategory) Is_Entity() {}
+
+type ProblemReportCreateResource struct {
+	Pos  *ReportPosition `json:"pos"`
+	Type string          `json:"type"`
+}
+
+type ReportPosition struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
 
 type WGS84Position struct {
 	Lon float64 `json:"lon"`

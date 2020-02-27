@@ -14,37 +14,30 @@ func (ec *executionContext) __resolve__service(ctx context.Context) (federation.
 		return federation.Service{}, errors.New("federated introspection disabled")
 	}
 	return federation.Service{
-		SDL: `scalar DateTime
-type Device @key(fields: "id") {
+		SDL: `type Mutation @extends {
+	create(input: ProblemReportCreateResource!): ProblemReport!
+}
+type ProblemReport @key(fields: "id") {
 	id: ID!
+	pos: WGS84Position!
+	type: String!
 }
-input MeasurementPosition {
-	lon: Float!
-	lat: Float!
+type ProblemReportCategory @key(fields: "id") {
+	id: ID!
+	label: String!
+	reportType: String!
 }
-type Mutation @extends {
-	addSnowdepthMeasurement(input: NewSnowdepthMeasurement!): Snowdepth!
-}
-input NewSnowdepthMeasurement {
-	pos: MeasurementPosition!
-	depth: Float!
-}
-type Origin {
-	device: Device
-	pos: WGS84Position
+input ProblemReportCreateResource {
+	pos: ReportPosition!
+	type: String!
 }
 type Query @extends {
-	snowdepths: [Snowdepth]!
+	getAll: [ProblemReport]!
+	getCategories: [ProblemReportCategory]!
 }
-type Snowdepth implements Telemetry {
-	from: Origin!
-	when: DateTime!
-	depth: Float!
-	manual: Boolean
-}
-interface Telemetry {
-	from: Origin!
-	when: DateTime!
+input ReportPosition {
+	lat: Float!
+	lon: Float!
 }
 type WGS84Position {
 	lon: Float!
@@ -63,12 +56,24 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 		}
 		switch typeName {
 
-		case "Device":
+		case "ProblemReport":
 			id, ok := rep["id"].(string)
 			if !ok {
 				return nil, errors.New("opsies")
 			}
-			resp, err := ec.resolvers.Entity().FindDeviceByID(ctx, id)
+			resp, err := ec.resolvers.Entity().FindProblemReportByID(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+
+			list = append(list, resp)
+
+		case "ProblemReportCategory":
+			id, ok := rep["id"].(string)
+			if !ok {
+				return nil, errors.New("opsies")
+			}
+			resp, err := ec.resolvers.Entity().FindProblemReportCategoryByID(ctx, id)
 			if err != nil {
 				return nil, err
 			}
