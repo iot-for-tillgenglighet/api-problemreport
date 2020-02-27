@@ -62,7 +62,6 @@ github.com/hashicorp/golang-lru v0.5.3 h1:YPkqC67at8FYaadspW/6uE0COsBxS2656RLEr8
 github.com/hashicorp/golang-lru v0.5.3/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/iot-for-tillgenglighet/api-problemreport v0.0.0-20191106170913-dadd03bafe2c h1:GOGhbHJ8WFo33GDRWT0QEjUhFC1gX6RpnuQ/uBmDf9M=
-github.com/iot-for-tillgenglighet/api-temperature v0.0.0-20191114231120-e3744f3c39f6/go.mod h1:leMwbaSLFAqHJVgRanPyfkLqutaH5fvfMmDgWxcT594=
 github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20191114224854-abfc2ffce868 h1:nw1SBUEVRNkMOr9fZNxEk2832iB6d+MuOsaTkCnqVjY=
 github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20191114224854-abfc2ffce868/go.mod h1:pICHkwvHaONBKmJhjSqYH23mS0y+iTQd3KOxKKlAGbQ=
 github.com/jinzhu/gorm v1.9.10/go.mod h1:Kh6hTsSGffh4ui079FHrR5Gg+5D0hgihqDcsDN2BBJY=

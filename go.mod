@@ -9,7 +9,6 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/iot-for-tillgenglighet/api-temperature v0.0.0-20191114231120-e3744f3c39f6
 	github.com/iot-for-tillgenglighet/messaging-golang v0.0.0-20191114224854-abfc2ffce868
 	github.com/jinzhu/gorm v1.9.12
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
