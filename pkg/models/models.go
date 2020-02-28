@@ -11,7 +11,7 @@ type ProblemReport struct {
 	Latitude  float64
 	Longitude float64
 	Type      string
-	Timestamp string `gorm:"unique_index:idx_device_timestamp"`
+	Timestamp string
 }
 
 //ProblemReportCategory Base object for problem report category
