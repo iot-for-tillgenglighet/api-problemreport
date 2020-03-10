@@ -34,6 +34,7 @@ func ConnectToDB() {
 	username := os.Getenv("PROBLEMREPORT_DB_USER")
 	dbName := os.Getenv("PROBLEMREPORT_DB_NAME")
 	password := os.Getenv("PROBLEMREPORT_DB_PASSWORD")
+	applicationMode := os.Getenv("PROBLEMREPORT_APP_MODE")
 	sslMode := getEnv("PROBLEMREPORT_DB_SSLMODE", "require")
 
 	dbURI := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=%s password=%s", dbHost, username, dbName, sslMode, password)
@@ -48,7 +49,9 @@ func ConnectToDB() {
 			db = conn
 			db.Debug().AutoMigrate(&models.ProblemReport{})
 			db.Debug().AutoMigrate(&models.ProblemReportCategory{})
-			db.Debug().Exec("TRUNCATE TABLE problem_report_categories RESTART IDENTITY; INSERT INTO problem_report_categories(created_at, updated_at, label,report_type,enabled) VALUES(NOW(),NOW(),'Halka','TYPE_ICE', true),(NOW(),NOW(),'Vägskada', 'TYPE_ROAD', true), (NOW(),NOW(),'Otrygghet', 'TYPE_SAFETY', true)")
+			if applicationMode == "debug" {
+				db.Debug().Exec("TRUNCATE TABLE problem_report_categories RESTART IDENTITY; INSERT INTO problem_report_categories(created_at, updated_at, label,report_type,enabled) VALUES(NOW(),NOW(),'Halka','TYPE_ICE', true),(NOW(),NOW(),'Vägskada', 'TYPE_ROAD', true), (NOW(),NOW(),'Otrygghet', 'TYPE_SAFETY', true)")
+			}
 			return
 		}
 		defer conn.Close()

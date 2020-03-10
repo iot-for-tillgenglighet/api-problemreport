@@ -18,6 +18,7 @@
                 "PROBLEMREPORT_DB_PASSWORD": "testpass",
                 "PROBLEMREPORT_DB_SSLMODE": "disable",
                 "PROBLEMREPORT_API_PORT": "8383",
+                "PROBLEMREPORT_APP_MODE": "debug",
                 "RABBITMQ_HOST": "localhost"
             },
             "args": []
