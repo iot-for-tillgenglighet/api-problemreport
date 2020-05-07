@@ -1,7 +1,9 @@
 package database
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -18,6 +20,25 @@ type Datastore interface {
 	GetAll() ([]models.ProblemReport, error)
 	GetAllByPeriod(startDate time.Time, endDate time.Time) ([]models.ProblemReport, error)
 	GetCategories() ([]models.ProblemReportCategory, error)
+}
+
+var dbCtxKey = &databaseContextKey{"database"}
+
+type databaseContextKey struct {
+	name string
+}
+
+// Middleware packs a pointer to the datastore into context
+func Middleware(db Datastore) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), dbCtxKey, db)
+
+			// and call the next with our new context
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 var db *gorm.DB

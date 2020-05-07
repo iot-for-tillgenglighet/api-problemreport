@@ -2,10 +2,13 @@ package handler
 
 import (
 	"compress/flate"
-	"math"
 	"net/http"
 	"os"
+	"strconv"
 
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/99designs/gqlgen/handler"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -14,11 +17,35 @@ import (
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/models"
 	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/datamodels/fiware"
 	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld/types"
 	"github.com/rs/cors"
 
 	log "github.com/sirupsen/logrus"
 )
+
+type RequestRouter struct {
+	impl *chi.Mux
+}
+
+func (router *RequestRouter) addGraphQLHandlers(db database.Datastore) {
+	gqlServer := handler.New(gql.NewExecutableSchema(gql.Config{Resolvers: &gql.Resolver{}}))
+	gqlServer.AddTransport(&transport.POST{})
+	gqlServer.Use(extension.Introspection{})
+
+	// TODO: Investigate some way to use closures instead of context even for GraphQL handlers
+	router.impl.Use(database.Middleware(db))
+
+	router.impl.Handle("/api/graphql/playground", playground.Handler("GraphQL playground", "/api/graphql"))
+	router.impl.Handle("/api/graphql", gqlServer)
+}
+
+func (router *RequestRouter) addNGSIHandlers(contextRegistry ngsi.ContextRegistry) {
+	router.Get("/ngsi-ld/v1/entities", ngsi.NewQueryEntitiesHandler(contextRegistry))
+}
+
+//Get accepts a pattern that should be routed to the handlerFn on a GET request
+func (router *RequestRouter) Get(pattern string, handlerFn http.HandlerFunc) {
+	router.impl.Get(pattern, handlerFn)
+}
 
 func Router() {
 
@@ -89,10 +116,10 @@ type contextSource struct {
 	db database.Datastore
 }
 
-func convertDatabaseRecordToWeatherObserved(r *models.Temperature) *fiware.WeatherObserved {
+func convertDatabaseRecordToOpen311ServiceRequest(r *models.ProblemReport) *fiware.Open311ServiceRequest {
 	if r != nil {
-		entity := fiware.NewWeatherObserved("temperature:"+r.Device, r.Latitude, r.Longitude, r.Timestamp)
-		entity.Temperature = types.NewNumberProperty(math.Round(float64(r.Temp*10)) / 10)
+		typeNumber, _ := strconv.Atoi(r.Type)
+		entity := fiware.NewOpen311ServiceRequest(r.Latitude, r.Longitude, typeNumber, r.Timestamp)
 		return entity
 	}
 
@@ -108,7 +135,7 @@ func (cs contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitie
 
 	if err == nil {
 		for _, v := range problemReport {
-			err = callback(convertDatabaseRecordToWeatherObserved(&v))
+			err = callback(convertDatabaseRecordToOpen311ServiceRequest(&v))
 			if err != nil {
 				break
 			}
@@ -119,9 +146,9 @@ func (cs contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitie
 }
 
 func (cs contextSource) ProvidesAttribute(attributeName string) bool {
-	return attributeName == "temperature"
+	return attributeName == "problemReport"
 }
 
 func (cs contextSource) ProvidesType(typeName string) bool {
-	return typeName == "WeatherObserved"
+	return typeName == "Open311ServiceRequest"
 }
