@@ -12,6 +12,14 @@ import (
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/models"
 )
 
+//Datastore is an interface that is used to inject the database into different handlers to improve testability
+type Datastore interface {
+	Create(entity *models.ProblemReport) (*models.ProblemReport, error)
+	GetAll() ([]models.ProblemReport, error)
+	GetAllByPeriod(startDate time.Time, endDate time.Time) ([]models.ProblemReport, error)
+	GetCategories() ([]models.ProblemReportCategory, error)
+}
+
 var db *gorm.DB
 
 //GetDB returns a pointer to our global database object. Yes, this should be refactored ...
