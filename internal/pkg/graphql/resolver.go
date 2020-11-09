@@ -37,15 +37,16 @@ func (r *mutationResolver) Create(ctx context.Context, input ProblemReportCreate
 		Type:      input.Type,
 	}
 
-	savedEntity, err := database.Create(entity)
+	db, _ := database.ConnectToDB()
+	savedEntity, err := db.Create(entity)
 	return convertEntityToGQL(savedEntity), err
 }
 
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) GetAll(ctx context.Context) ([]*ProblemReport, error) {
-
-	entities, err := database.GetAll()
+	db, _ := database.ConnectToDB()
+	entities, err := db.GetAll()
 
 	if err != nil {
 		panic("Query failed: " + err.Error())
@@ -67,7 +68,8 @@ func (r *queryResolver) GetAll(ctx context.Context) ([]*ProblemReport, error) {
 }
 
 func (r *queryResolver) GetCategories(ctx context.Context) ([]*ProblemReportCategory, error) {
-	entities, err := database.GetCategories()
+	db, _ := database.ConnectToDB()
+	entities, err := db.GetCategories()
 
 	if err != nil {
 		panic("Query failed: " + err.Error())
