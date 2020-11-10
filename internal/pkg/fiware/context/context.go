@@ -19,7 +19,7 @@ func CreateSource(db database.Datastore) ngsi.ContextSource {
 	return &contextSource{db: db}
 }
 
-func (cs contextSource) CreateEntity(typeName, entityID string, req ngsi.Request) error {
+func (cs *contextSource) CreateEntity(typeName, entityID string, req ngsi.Request) error {
 
 	serviceRequest := &fiware.Open311ServiceRequest{}
 	err := req.DecodeBodyInto(serviceRequest)
@@ -31,7 +31,7 @@ func (cs contextSource) CreateEntity(typeName, entityID string, req ngsi.Request
 	return err
 }
 
-func (cs contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitiesCallback) error {
+func (cs *contextSource) GetEntities(query ngsi.Query, callback ngsi.QueryEntitiesCallback) error {
 
 	var err error
 
