@@ -93,7 +93,7 @@ func (db *myDB) Create(entity *models.ProblemReport) (*models.ProblemReport, err
 
 	entity.Timestamp = currentTime.Format(time.RFC3339)
 
-	db.impl.Debug().Create(entity)
+	db.impl.Create(entity)
 
 	return entity, nil
 }
@@ -102,7 +102,7 @@ func (db *myDB) Create(entity *models.ProblemReport) (*models.ProblemReport, err
 func (db *myDB) GetAll() ([]models.ProblemReport, error) {
 
 	entities := []models.ProblemReport{}
-	db.impl.Debug().Table("problem_reports").Select("*").Find(&entities)
+	db.impl.Table("problem_reports").Select("*").Find(&entities)
 
 	return entities, nil
 }
@@ -110,7 +110,7 @@ func (db *myDB) GetAll() ([]models.ProblemReport, error) {
 //GetAllByPeriod Fetches all problem reports by period
 func (db *myDB) GetAllByPeriod(startDate time.Time, endDate time.Time) ([]models.ProblemReport, error) {
 	entities := []models.ProblemReport{}
-	db.impl.Debug().Table("problem_reports").Where("updated_at BETWEEN ? AND ?", startDate, endDate).Find(&entities)
+	db.impl.Table("problem_reports").Where("updated_at BETWEEN ? AND ?", startDate, endDate).Find(&entities)
 
 	return entities, nil
 }
@@ -118,7 +118,7 @@ func (db *myDB) GetAllByPeriod(startDate time.Time, endDate time.Time) ([]models
 //GetCategories fetches all categories
 func (db *myDB) GetCategories() ([]models.ProblemReportCategory, error) {
 	entities := []models.ProblemReportCategory{}
-	db.impl.Debug().Table("problem_report_categories").Where("enabled = ?", true).Find(&entities)
+	db.impl.Table("problem_report_categories").Where("enabled = ?", true).Find(&entities)
 
 	return entities, nil
 }
