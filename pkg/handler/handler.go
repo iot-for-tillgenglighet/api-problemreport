@@ -14,7 +14,7 @@ import (
 	fiwarecontext "github.com/iot-for-tillgenglighet/api-problemreport/internal/pkg/fiware/context"
 	gql "github.com/iot-for-tillgenglighet/api-problemreport/internal/pkg/graphql"
 	"github.com/iot-for-tillgenglighet/api-problemreport/pkg/database"
-	"github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld"
+	ngsi "github.com/iot-for-tillgenglighet/ngsi-ld-golang/pkg/ngsi-ld"
 
 	"github.com/rs/cors"
 
@@ -39,6 +39,11 @@ func (router *RequestRouter) addGraphQLHandlers(db database.Datastore) {
 
 func (router *RequestRouter) addNGSIHandlers(contextRegistry ngsi.ContextRegistry) {
 	router.Get("/ngsi-ld/v1/entities", ngsi.NewQueryEntitiesHandler(contextRegistry))
+	router.Post("/ngsi-ld/v1/entities", ngsi.NewCreateEntityHandler(contextRegistry))
+}
+
+func (router *RequestRouter) Post(pattern string, handlerFn http.HandlerFunc) {
+	router.impl.Post(pattern, handlerFn)
 }
 
 func (router *RequestRouter) Get(pattern string, handlerFn http.HandlerFunc) {
