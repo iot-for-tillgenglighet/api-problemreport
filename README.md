@@ -2,6 +2,10 @@
 
 This service is makes it possible to store problem reports via an API using graphql
 
+## Deprecation Notice
+
+This repository is deprecated and the code has moved to https://github.com/diwise/api-problemreport
+
 # Building and tagging with Docker
 
 `docker build -f deployments/Dockerfile -t iot-for-tillgenglighet/api-problemreport:latest .`
